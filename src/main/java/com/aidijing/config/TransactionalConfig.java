@@ -1,7 +1,6 @@
 package com.aidijing.config;
 
-import org.springframework.aop.aspectj.AspectJExpressionPointcutAdvisor;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -74,15 +73,38 @@ public class TransactionalConfig {
 
     /**
      * 配置事务 AOP 切入点
+     * {@link DataSourceSwitch}
      *
      * @param transactionInterceptor : {@link #customizeTransactionInterceptor(PlatformTransactionManager)}
+
+     @Bean public AspectJExpressionPointcutAdvisor aspectJExpressionPointcutAdvisor ( @Qualifier( "customizeTransactionInterceptor" ) TransactionInterceptor transactionInterceptor ) {
+     AspectJExpressionPointcutAdvisor pointcut = new AspectJExpressionPointcutAdvisor();
+     pointcut.setAdvice( transactionInterceptor );
+     pointcut.setExpression( "execution (* com.aidijing.*.*service.*.*(..))" );
+     return pointcut;
+     }
+     */
+
+
+    /**
+     * {@link #dataSourceSwitchMethodInterceptor()}
+     * {@link #customizeTransactionInterceptor(PlatformTransactionManager)}
+     *
+     * @return
      */
     @Bean
-    public AspectJExpressionPointcutAdvisor aspectJExpressionPointcutAdvisor ( @Qualifier( "customizeTransactionInterceptor" ) TransactionInterceptor transactionInterceptor ) {
-        AspectJExpressionPointcutAdvisor pointcut = new AspectJExpressionPointcutAdvisor();
-        pointcut.setAdvice( transactionInterceptor );
-        pointcut.setExpression( "execution (* com.aidijing.*.*service.*.*(..))" );
-        return pointcut;
+    public BeanNameAutoProxyCreator beanNameAutoProxyCreator () {
+        BeanNameAutoProxyCreator beanNameAutoProxyCreator = new BeanNameAutoProxyCreator();
+        beanNameAutoProxyCreator.setInterceptorNames( "dataSourceSwitchMethodInterceptor" ,
+                                                      "customizeTransactionInterceptor" );
+        beanNameAutoProxyCreator.setBeanNames( "*Service" , "*ServiceImpl" );
+        beanNameAutoProxyCreator.setProxyTargetClass( true );
+        return beanNameAutoProxyCreator;
+    }
+
+    @Bean
+    public DataSourceSwitchMethodInterceptor dataSourceSwitchMethodInterceptor () {
+        return new DataSourceSwitchMethodInterceptor();
     }
 
 

@@ -25,20 +25,20 @@ public class DataSourceConfig {
     /**
      * 动态数据源配置
      *
-     * @param dataSourceShop         : 商城数据源
-     * @param dataSourceDataPlatform : 数据平台数据源
+     * @param dataSourceOrder : 订单数据源
+     * @param dataSourceUser  : 用户数据源
      * @return
      */
     @Bean
-    public MultipleDataSource multipleDataSource ( @Qualifier( GlobalConstant.ORDER_DATA_SOURCE_KEY ) DataSource dataSourceShop ,
-                                                   @Qualifier( GlobalConstant.USER_DATA_SOURCE_KEY ) DataSource dataSourceDataPlatform ) {
-        MultipleDataSource    multipleDataSource = new MultipleDataSource();
-        Map< Object, Object > targetDataSources  = new HashMap<>();
-        targetDataSources.put( GlobalConstant.ORDER_DATA_SOURCE_KEY , dataSourceShop );
-        targetDataSources.put( GlobalConstant.USER_DATA_SOURCE_KEY , dataSourceDataPlatform );
-        multipleDataSource.setTargetDataSources( targetDataSources );
-        multipleDataSource.setDefaultTargetDataSource( dataSourceShop );
-        return multipleDataSource;
+    public DynamicMultipleDataSource multipleDataSource ( @Qualifier( GlobalConstant.ORDER_DATA_SOURCE_KEY ) DataSource dataSourceOrder ,
+                                                          @Qualifier( GlobalConstant.USER_DATA_SOURCE_KEY ) DataSource dataSourceUser ) {
+        DynamicMultipleDataSource dynamicMultipleDataSource = new DynamicMultipleDataSource();
+        Map< Object, Object >     targetDataSources         = new HashMap<>();
+        targetDataSources.put( GlobalConstant.ORDER_DATA_SOURCE_KEY , dataSourceOrder );
+        targetDataSources.put( GlobalConstant.USER_DATA_SOURCE_KEY , dataSourceUser );
+        dynamicMultipleDataSource.setTargetDataSources( targetDataSources );
+        dynamicMultipleDataSource.setDefaultTargetDataSource( dataSourceOrder );
+        return dynamicMultipleDataSource;
     }
 
     @Primary
@@ -56,22 +56,24 @@ public class DataSourceConfig {
 
 
     @Bean
-    public SqlSessionFactory sqlSessionFactory ( MultipleDataSource multipleDataSource ) throws Exception {
+    public SqlSessionFactory sqlSessionFactory ( DynamicMultipleDataSource dynamicMultipleDataSource ) throws
+                                                                                                       Exception {
         SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
-        sqlSessionFactoryBean.setDataSource( multipleDataSource );
+        sqlSessionFactoryBean.setDataSource( dynamicMultipleDataSource );
         return sqlSessionFactoryBean.getObject();
     }
 
     @Bean
-    public DataSourceTransactionManager transactionManager ( MultipleDataSource multipleDataSource ) throws Exception {
-        return new DataSourceTransactionManager( multipleDataSource );
+    public DataSourceTransactionManager transactionManager ( DynamicMultipleDataSource dynamicMultipleDataSource ) throws
+                                                                                                                   Exception {
+        return new DataSourceTransactionManager( dynamicMultipleDataSource );
     }
 
     @Bean
     @Primary
-    public MybatisSqlSessionFactoryBean mybatisSqlSessionFactoryBean ( MultipleDataSource multipleDataSource ) {
+    public MybatisSqlSessionFactoryBean mybatisSqlSessionFactoryBean ( DynamicMultipleDataSource dynamicMultipleDataSource ) {
         MybatisSqlSessionFactoryBean sqlSessionFactoryBean = new MybatisSqlSessionFactoryBean();
-        sqlSessionFactoryBean.setDataSource( multipleDataSource );
+        sqlSessionFactoryBean.setDataSource( dynamicMultipleDataSource );
         return sqlSessionFactoryBean;
     }
 

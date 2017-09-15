@@ -2,6 +2,7 @@ package com.aidijing.controller;
 
 import com.aidijing.order.domain.Order;
 import com.aidijing.order.service.OrderService;
+import com.aidijing.pay.PayService;
 import com.aidijing.user.domain.User;
 import com.aidijing.user.service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -23,6 +24,8 @@ public class DemoController {
     private UserService  userService;
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private PayService   payService;
 
 
     @GetMapping( "users-tx" )
@@ -44,6 +47,11 @@ public class DemoController {
     @GetMapping( "orders" )
     public ResponseEntity< List< Order > > listOrder () {
         return ResponseEntity.ok( orderService.list() );
+    }
+
+    @GetMapping( "pays" )
+    public ResponseEntity< List< String > > listPay () {
+        return ResponseEntity.ok( payService.list() );
     }
 
 }

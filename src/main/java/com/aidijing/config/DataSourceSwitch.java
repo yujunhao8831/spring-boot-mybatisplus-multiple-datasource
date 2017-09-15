@@ -1,11 +1,8 @@
 package com.aidijing.config;
 
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -14,10 +11,9 @@ import java.util.Objects;
  * @author : 披荆斩棘
  * @date : 2017/9/6
  */
-
-@Aspect
-@Component
-@Order( 1 )
+//@Aspect
+//@Order( 1 )
+//@Component
 public class DataSourceSwitch {
 
 
@@ -39,10 +35,10 @@ public class DataSourceSwitch {
         final Method            method            = this.currentMethod( joinPoint );
         final DynamicDataSource dynamicDataSource = method.getAnnotation( DynamicDataSource.class );
         if ( Objects.isNull( dynamicDataSource ) ) {
-            MultipleDataSource.setDataSourceKey( defaultKey );
+            DynamicMultipleDataSource.setDataSourceKey( defaultKey );
             return;
         }
-        MultipleDataSource.setDataSourceKey( dynamicDataSource.value() );
+        DynamicMultipleDataSource.setDataSourceKey( dynamicDataSource.value() );
     }
 
 

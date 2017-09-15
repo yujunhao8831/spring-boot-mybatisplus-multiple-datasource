@@ -1,6 +1,5 @@
 package com.aidijing.config;
 
-import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 /**
@@ -9,8 +8,7 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
  * @author : 披荆斩棘
  * @date : 2017/9/6
  */
-@Configuration
-public class MultipleDataSource extends AbstractRoutingDataSource {
+public class DynamicMultipleDataSource extends AbstractRoutingDataSource {
 
     private static final ThreadLocal< String > DATA_SOURCE_KEY = new ThreadLocal<>();
 

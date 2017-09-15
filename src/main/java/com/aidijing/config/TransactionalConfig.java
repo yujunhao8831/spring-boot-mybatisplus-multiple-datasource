@@ -1,22 +1,76 @@
 package com.aidijing.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.interceptor.*;
+import org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource;
+import org.springframework.transaction.interceptor.RollbackRuleAttribute;
+import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author : 披荆斩棘
  * @date : 2017/9/8
  */
+@Setter
+@Getter
 @Configuration
+@ConfigurationProperties( prefix = "aidijing.transactional" )
 public class TransactionalConfig {
+
+
+    private static final String   CUSTOMIZE_TRANSACTION_INTERCEPTOR_NAME               = "customizeTransactionInterceptor";
+    private static final String   DATA_SOURCE_SWITCH_METHOD_INTERCEPTOR_NAME           = "dataSourceSwitchMethodInterceptor";
+    /**
+     * 默认只对 "*Service" , "*ServiceImpl" Bean 进行事务处理,"*"表示模糊匹配, 比如 : userService,orderServiceImpl
+     */
+    private static final String[] DEFAULT_TRANSACTION_BEAN_NAMES                       = { "*Service" , "*ServiceImpl" };
+    /**
+     * 可传播事务配置
+     */
+    private static final String[] DEFAULT_REQUIRED_METHOD_RULE_TRANSACTION_ATTRIBUTES  = {
+            "add*" ,
+            "save*" ,
+            "insert*" ,
+            "delete*" ,
+            "update*" ,
+            "edit*" ,
+            "batch*" ,
+            "create*" ,
+            "remove*" ,
+    };
+    /**
+     * 默认的只读事务
+     */
+    private static final String[] DEFAULT_READ_ONLY_METHOD_RULE_TRANSACTION_ATTRIBUTES = {
+            "get*" ,
+            "count*" ,
+            "find*" ,
+            "query*" ,
+            "select*" ,
+            "list*" ,
+            "*" ,
+    };
+    /**
+     * 自定义事务 BeanName 拦截
+     */
+    private              String[] customizeTransactionBeanNames                        = {};
+    /**
+     * 自定义方法名的事务属性相关联,可以使用通配符(*)字符关联相同的事务属性的设置方法; 只读事务
+     */
+    private              String[] customizeReadOnlyMethodRuleTransactionAttributes     = {};
+    /**
+     * 自定义方法名的事务属性相关联,可以使用通配符(*)字符关联相同的事务属性的设置方法;
+     * 传播事务(默认的){@link org.springframework.transaction.annotation.Propagation#REQUIRED}
+     */
+    private              String[] customizeRequiredMethodRuleTransactionAttributes     = {};
 
 
     /**
@@ -25,48 +79,27 @@ public class TransactionalConfig {
      * @param transactionManager : 事务管理器
      * @return
      */
-    @Bean
+    @Bean( CUSTOMIZE_TRANSACTION_INTERCEPTOR_NAME )
     public TransactionInterceptor customizeTransactionInterceptor ( PlatformTransactionManager transactionManager ) {
         NameMatchTransactionAttributeSource transactionAttributeSource = new NameMatchTransactionAttributeSource();
-
-        RuleBasedTransactionAttribute readOnly = this.readOnlyTransactionRule();
-        RuleBasedTransactionAttribute required = this.requiredTransactionRule();
-
-        Map< String, TransactionAttribute > nameMap = new HashMap<>();
-        nameMap.put( "get*" , readOnly );
-        nameMap.put( "count*" , readOnly );
-        nameMap.put( "find*" , readOnly );
-        nameMap.put( "query*" , readOnly );
-        nameMap.put( "select*" , readOnly );
-        nameMap.put( "load*" , readOnly );
-        nameMap.put( "list*" , readOnly );
-        nameMap.put( "*" , readOnly );
-
-        nameMap.put( "add*" , required );
-        nameMap.put( "save*" , required );
-        nameMap.put( "insert*" , required );
-        nameMap.put( "delete*" , required );
-        nameMap.put( "update*" , required );
-        nameMap.put( "edit*" , required );
-        nameMap.put( "do*" , required );
-        nameMap.put( "begin*" , required );
-        nameMap.put( "batch*" , required );
-        nameMap.put( "pay*" , required );
-        nameMap.put( "register*" , required );
-        nameMap.put( "service*" , required );
-        nameMap.put( "out*" , required );
-        nameMap.put( "recharge*" , required );
-        nameMap.put( "into*" , required );
-        nameMap.put( "subtraction*" , required );
-        nameMap.put( "add*" , required );
-        nameMap.put( "create*" , required );
-        nameMap.put( "service*" , required );
-        nameMap.put( "buy*" , required );
-        nameMap.put( "dispatcher*" , required );
-        nameMap.put( "extract*" , required );
-        nameMap.put( "reversal*" , required );
-
-        transactionAttributeSource.setNameMap( nameMap );
+        RuleBasedTransactionAttribute       readOnly                   = this.readOnlyTransactionRule();
+        RuleBasedTransactionAttribute       required                   = this.requiredTransactionRule();
+        // 默认的只读事务配置
+        for ( String methodName : DEFAULT_READ_ONLY_METHOD_RULE_TRANSACTION_ATTRIBUTES ) {
+            transactionAttributeSource.addTransactionalMethod( methodName , readOnly );
+        }
+        // 默认的传播事务配置
+        for ( String methodName : DEFAULT_REQUIRED_METHOD_RULE_TRANSACTION_ATTRIBUTES ) {
+            transactionAttributeSource.addTransactionalMethod( methodName , required );
+        }
+        // 定制的只读事务配置
+        for ( String methodName : customizeReadOnlyMethodRuleTransactionAttributes ) {
+            transactionAttributeSource.addTransactionalMethod( methodName , readOnly );
+        }
+        // 定制的传播事务配置
+        for ( String methodName : customizeRequiredMethodRuleTransactionAttributes ) {
+            transactionAttributeSource.addTransactionalMethod( methodName , required );
+        }
         return new TransactionInterceptor( transactionManager , transactionAttributeSource );
     }
 
@@ -95,14 +128,21 @@ public class TransactionalConfig {
     @Bean
     public BeanNameAutoProxyCreator beanNameAutoProxyCreator () {
         BeanNameAutoProxyCreator beanNameAutoProxyCreator = new BeanNameAutoProxyCreator();
-        beanNameAutoProxyCreator.setInterceptorNames( "dataSourceSwitchMethodInterceptor" ,
-                                                      "customizeTransactionInterceptor" );
-        beanNameAutoProxyCreator.setBeanNames( "*Service" , "*ServiceImpl" );
+        beanNameAutoProxyCreator.setInterceptorNames( DATA_SOURCE_SWITCH_METHOD_INTERCEPTOR_NAME ,
+                                                      CUSTOMIZE_TRANSACTION_INTERCEPTOR_NAME );
+        // 默认
+        for ( String defaultTransactionBeanNameSuffix : DEFAULT_TRANSACTION_BEAN_NAMES ) {
+            beanNameAutoProxyCreator.setBeanNames( defaultTransactionBeanNameSuffix );
+        }
+        // 定制
+        for ( String customizeTransactionBeanName : customizeTransactionBeanNames ) {
+            beanNameAutoProxyCreator.setBeanNames( customizeTransactionBeanName );
+        }
         beanNameAutoProxyCreator.setProxyTargetClass( true );
         return beanNameAutoProxyCreator;
     }
 
-    @Bean
+    @Bean( DATA_SOURCE_SWITCH_METHOD_INTERCEPTOR_NAME )
     public DataSourceSwitchMethodInterceptor dataSourceSwitchMethodInterceptor () {
         return new DataSourceSwitchMethodInterceptor();
     }

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
@@ -21,7 +20,6 @@ import java.util.Map;
  * @date : 2017/9/6
  */
 @Configuration
-@ImportResource( "classpath:applicationContext-tx.xml" )
 public class DataSourceConfig {
 
     /**

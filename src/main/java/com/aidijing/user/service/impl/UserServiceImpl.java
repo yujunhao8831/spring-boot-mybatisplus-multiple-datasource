@@ -25,4 +25,11 @@ public class UserServiceImpl extends ServiceImpl< UserMapper, User > implements 
     public List< User > list () {
         return super.selectList( null );
     }
+
+    @Override
+    public User save ( User user ) {
+        super.insert( user );
+        System.err.println( 0 / 0 );
+        return user;
+    }
 }

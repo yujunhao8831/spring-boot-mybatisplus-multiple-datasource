@@ -17,4 +17,6 @@ public interface UserService extends IService<User> {
 
 
     List<User> list ();
+
+    User save ( User user );
 }

@@ -4,6 +4,7 @@ import com.aidijing.order.domain.Order;
 import com.aidijing.order.service.OrderService;
 import com.aidijing.user.domain.User;
 import com.aidijing.user.service.UserService;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,17 @@ public class DemoController {
     @Autowired
     private OrderService orderService;
 
+
+    @GetMapping( "users-tx" )
+    public ResponseEntity< User > saveUser () {
+        return ResponseEntity.ok(
+                userService.save(
+                        new User().setEmail( "yujunhao_8831@yahoo.com" )
+                                  .setUsername( RandomStringUtils.randomNumeric( 1 , 10 ) )
+                                  .setPassword( RandomStringUtils.randomNumeric( 1 , 10 ) )
+                )
+        );
+    }
 
     @GetMapping( "users" )
     public ResponseEntity< List< User > > listUser () {

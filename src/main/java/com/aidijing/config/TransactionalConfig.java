@@ -13,7 +13,10 @@ import org.springframework.transaction.interceptor.RollbackRuleAttribute;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author : 披荆斩棘
@@ -130,13 +133,15 @@ public class TransactionalConfig {
         BeanNameAutoProxyCreator beanNameAutoProxyCreator = new BeanNameAutoProxyCreator();
         beanNameAutoProxyCreator.setInterceptorNames( DATA_SOURCE_SWITCH_METHOD_INTERCEPTOR_NAME ,
                                                       CUSTOMIZE_TRANSACTION_INTERCEPTOR_NAME );
+
+        List< String > transactionBeanNames = new ArrayList<>( DEFAULT_TRANSACTION_BEAN_NAMES.length + customizeTransactionBeanNames.length );
         // 默认
-        for ( String defaultTransactionBeanNameSuffix : DEFAULT_TRANSACTION_BEAN_NAMES ) {
-            beanNameAutoProxyCreator.setBeanNames( defaultTransactionBeanNameSuffix );
-        }
+        transactionBeanNames.addAll( Arrays.asList( DEFAULT_TRANSACTION_BEAN_NAMES ) );
         // 定制
-        for ( String customizeTransactionBeanName : customizeTransactionBeanNames ) {
-            beanNameAutoProxyCreator.setBeanNames( customizeTransactionBeanName );
+        transactionBeanNames.addAll( Arrays.asList( customizeTransactionBeanNames ) );
+        // 归集
+        for ( String transactionBeanName : transactionBeanNames ) {
+            beanNameAutoProxyCreator.setBeanNames( transactionBeanName );
         }
         beanNameAutoProxyCreator.setProxyTargetClass( true );
         return beanNameAutoProxyCreator;
